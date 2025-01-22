@@ -21,6 +21,7 @@ export const App: React.FC = () => {
   const [filter, setFilter] = useState<FilterProps>(FilterProps.all);
   const [inputValue, setInputValue] = useState('');
   const [tempoTodo, setTempoTodo] = useState<Todo | null>(null);
+  const [todoDelete, setTodoDelete] = useState<number | null>(null);
 
   const filteredTodo = todos.filter(todo => {
     if (filter === FilterProps.active) {
@@ -36,6 +37,14 @@ export const App: React.FC = () => {
 
   const activeCount = todos.filter(todo => !todo.completed).length;
   const completedCount = todos.filter(todo => todo.completed).length;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setError(null);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [error]);
 
   useEffect(() => {
     todoServises
@@ -77,11 +86,8 @@ export const App: React.FC = () => {
       setTodos(currentTodo => [...currentTodo, newTodo]);
     } catch {
       setError('Unable to add a todo');
-      const timer = setTimeout(() => {
-        setError(null);
-      }, 3000);
 
-      clearTimeout(timer);
+      throw Error('Unable to add a todo');
     } finally {
       setTempoTodo(null);
     }
@@ -91,6 +97,7 @@ export const App: React.FC = () => {
 
   //#region deleteTodo
   const deleteTodo = async (todoId: number) => {
+    setTodoDelete(todoId);
     try {
       await todoServises.deleteTodo(todoId);
       setTodos(currentTodo => currentTodo.filter(todo => todo.id !== todoId));
@@ -100,12 +107,43 @@ export const App: React.FC = () => {
         setError(null);
       }, 3000);
 
+      setTodoDelete(null);
+
       return () => clearTimeout(timer);
     }
 
     return;
   };
   //#endregion
+
+  const handleDeleteCompledTodo = async () => {
+    const completedTodo = todos.filter(todo => todo.completed);
+
+    if (completedTodo.length === 0) {
+      return;
+    }
+
+    try {
+      await Promise.allSettled(
+        completedTodo.map(todo => {
+          todoServises.deleteTodo(todo.id);
+          setTodoDelete(todo.id);
+        }),
+      );
+    } catch {
+      setError('Unable to delete a todo');
+      setTodos(todos.filter(todo => !todo.completed));
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 3000);
+
+      setTodoDelete(null);
+
+      return () => clearTimeout(timer);
+    }
+
+    return;
+  };
 
   return (
     <div className="todoapp">
@@ -118,12 +156,14 @@ export const App: React.FC = () => {
           addTodo={addTodo}
           setError={setError}
           filteredTodo={filteredTodo}
+          todoDelete={todoDelete}
         />
 
         <TodoList
           filteredTodo={filteredTodo}
           deleteTodo={deleteTodo}
           tempoTodo={tempoTodo}
+          todoDelete={todoDelete}
         />
 
         {/* Hide the footer if there are no todos */}
@@ -133,9 +173,7 @@ export const App: React.FC = () => {
             activeCount={activeCount}
             completedCount={completedCount}
             onFilterChange={setFilter}
-            onClearCompleted={() =>
-              setTodos(todos.filter(todo => !todo.completed))
-            }
+            onClearCompleted={handleDeleteCompledTodo}
           />
         )}
       </div>
@@ -143,7 +181,6 @@ export const App: React.FC = () => {
       {/* Add the 'hidden' class to hide the message smoothly */}
       <div
         data-cy="ErrorNotification"
-        // className={`notification is-danger is-light has-text-weight-normal ${!error ? 'hidden' : ''}`}
         className={classNames(
           'notification is-danger is-light has-text-weight-normal',
           {

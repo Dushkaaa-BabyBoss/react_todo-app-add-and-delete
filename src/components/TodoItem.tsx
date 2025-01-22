@@ -5,13 +5,17 @@ type TodoItemProps = {
   todo: Todo;
   deleteTodo: (todoId: number) => void;
   tempoTodo: Todo | null;
+  todoDelete: number | null;
 };
 
 export const TodoItem: React.FC<TodoItemProps> = ({
   todo,
   deleteTodo,
   tempoTodo,
+  todoDelete,
 }) => {
+  const isDeleting = todoDelete === todo.id;
+
   return (
     <div
       data-cy="Todo"
@@ -48,7 +52,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       {/* add class is-active */}
       <div
         data-cy="TodoLoader"
-        className={`modal overlay ${tempoTodo && !todo.id ? 'is-active' : ''}`}
+        className={`modal overlay ${(tempoTodo && !todo.id) || isDeleting ? 'is-active' : ''}`}
       >
         <div className="modal-background has-background-white-ter" />
         <div className="loader" />

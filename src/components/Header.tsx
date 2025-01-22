@@ -9,6 +9,7 @@ type HeaderProps = {
   addTodo: (title: string, userId: number, completed: boolean) => Promise<void>;
   setError: (text: string | null) => void;
   filteredTodo: Todo[];
+  todoDelete: number | null;
 };
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,6 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   addTodo,
   setError,
   filteredTodo,
+  todoDelete,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,10 +51,10 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   useEffect(() => {
-    if (!isLoading && inputValue === '') {
+    if ((!isLoading && inputValue === '') || inputValue !== '' || !todoDelete) {
       inputRef.current?.focus();
     }
-  }, [isLoading, inputValue]);
+  }, [isLoading, inputValue, todoDelete]);
 
   return (
     <header className="todoapp__header">
