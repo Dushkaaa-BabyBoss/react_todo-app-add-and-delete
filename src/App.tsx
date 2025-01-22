@@ -21,7 +21,7 @@ export const App: React.FC = () => {
   const [filter, setFilter] = useState<FilterProps>(FilterProps.all);
   const [inputValue, setInputValue] = useState('');
   const [tempoTodo, setTempoTodo] = useState<Todo | null>(null);
-  const [todoDelete, setTodoDelete] = useState<number | null>(null);
+  const [todoDelete, setTodoDelete] = useState<number[]>([]);
 
   const filteredTodo = todos.filter(todo => {
     if (filter === FilterProps.active) {
@@ -97,22 +97,21 @@ export const App: React.FC = () => {
 
   //#region deleteTodo
   const deleteTodo = async (todoId: number) => {
-    setTodoDelete(todoId);
-    try {
-      await todoServises.deleteTodo(todoId);
-      setTodos(currentTodo => currentTodo.filter(todo => todo.id !== todoId));
-    } catch {
-      setError('Unable to delete a todo');
-      const timer = setTimeout(() => {
-        setError(null);
-      }, 3000);
+    setTodoDelete(prevTodos => [...prevTodos, todoId]);
 
-      setTodoDelete(null);
-
-      return () => clearTimeout(timer);
-    }
-
-    return;
+    return todoServises
+      .deleteTodo(todoId)
+      .then(() => {
+        setTodos(currentTodo => currentTodo.filter(todo => todo.id !== todoId));
+      })
+      .catch(() => {
+        setError('Unable to delete a todo');
+      })
+      .finally(() => {
+        setTodoDelete(prevTodos =>
+          prevTodos.filter(prevTodo => prevTodo !== todoId),
+        );
+      });
   };
   //#endregion
 
@@ -123,26 +122,7 @@ export const App: React.FC = () => {
       return;
     }
 
-    try {
-      await Promise.allSettled(
-        completedTodo.map(todo => {
-          todoServises.deleteTodo(todo.id);
-          setTodoDelete(todo.id);
-        }),
-      );
-    } catch {
-      setError('Unable to delete a todo');
-      setTodos(todos.filter(todo => !todo.completed));
-      const timer = setTimeout(() => {
-        setError(null);
-      }, 3000);
-
-      setTodoDelete(null);
-
-      return () => clearTimeout(timer);
-    }
-
-    return;
+    await Promise.allSettled(completedTodo.map(todo => deleteTodo(todo.id)));
   };
 
   return (

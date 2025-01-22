@@ -5,9 +5,8 @@ type FilterProps = {
   filteredTodo: Todo[];
   deleteTodo: (todoId: number) => void;
   tempoTodo: Todo | null;
-  todoDelete: number | null;
+  todoDelete: number[];
 };
-
 export const TodoList: React.FC<FilterProps> = ({
   filteredTodo,
   deleteTodo,
@@ -22,7 +21,7 @@ export const TodoList: React.FC<FilterProps> = ({
           key={todo.id}
           deleteTodo={deleteTodo}
           tempoTodo={tempoTodo}
-          todoDelete={todoDelete}
+          isDeleting={todoDelete.includes(todo.id)}
         />
       ))}
       {tempoTodo && (
@@ -31,7 +30,7 @@ export const TodoList: React.FC<FilterProps> = ({
           key={tempoTodo.id}
           deleteTodo={deleteTodo}
           tempoTodo={tempoTodo}
-          todoDelete={todoDelete}
+          isDeleting={true}
         />
       )}
     </section>

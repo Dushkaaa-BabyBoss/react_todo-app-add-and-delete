@@ -5,17 +5,14 @@ type TodoItemProps = {
   todo: Todo;
   deleteTodo: (todoId: number) => void;
   tempoTodo: Todo | null;
-  todoDelete: number | null;
+  isDeleting: boolean;
 };
-
 export const TodoItem: React.FC<TodoItemProps> = ({
   todo,
   deleteTodo,
   tempoTodo,
-  todoDelete,
+  isDeleting,
 }) => {
-  const isDeleting = todoDelete === todo.id;
-
   return (
     <div
       data-cy="Todo"

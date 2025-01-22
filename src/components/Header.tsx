@@ -9,7 +9,7 @@ type HeaderProps = {
   addTodo: (title: string, userId: number, completed: boolean) => Promise<void>;
   setError: (text: string | null) => void;
   filteredTodo: Todo[];
-  todoDelete: number | null;
+  todoDelete: number[];
 };
 
 export const Header: React.FC<HeaderProps> = ({
